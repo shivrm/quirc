@@ -1,4 +1,7 @@
-quirc: lexer
+run: build
+	./build/lexer examples/bell.qc
+
+build: lexer
 	mkdir -p build
 	g++ src/lexer.cpp -o build/lexer
 

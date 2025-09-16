@@ -40,6 +40,9 @@ static void update_position(const char* text, int length,
 #define TOKEN(name) do { \
     int sl, sc, el, ec; \
     update_position(yytext, yyleng, sl, sc, el, ec); \
+    if (strcmp(#name, "NEWLINE") == 0) { \
+        yytext = (char*)"\\n"; \
+    } \
     printf("%-10s %-10s (%d:%d-%d:%d)\n", #name, yytext, sl, sc, el, ec); \
 } while(0)
 %}
@@ -57,6 +60,7 @@ ID         [A-Za-z_][A-Za-z0-9_]*
 "break"         { TOKEN(BREAK); }
 "continue"      { TOKEN(CONTINUE); }
 "fn"            { TOKEN(FN); }
+"struct"        { TOKEN(STRUCT); }
 "and"           { TOKEN(AND); }
 "or"            { TOKEN(OR); }
 "not"           { TOKEN(NOT); }

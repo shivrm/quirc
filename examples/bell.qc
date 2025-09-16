@@ -1,3 +1,9 @@
+// For testing purposes
+struct Pair {
+    q0: qubit,
+    q1: qubit
+}
+
 fn bell(qs: [qubit; n]) {
     let q0: qubit = 0
         H(q0)
