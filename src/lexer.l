@@ -59,6 +59,7 @@ ID         [A-Za-z_][A-Za-z0-9_]*
 "in"            { TOKEN(IN); }
 "break"         { TOKEN(BREAK); }
 "continue"      { TOKEN(CONTINUE); }
+"return"        { TOKEN(RETURN); }
 "fn"            { TOKEN(FN); }
 "struct"        { TOKEN(STRUCT); }
 "and"           { TOKEN(AND); }
@@ -67,6 +68,8 @@ ID         [A-Za-z_][A-Za-z0-9_]*
 
  /* Multi-character tokens */
 "->"            { TOKEN(ARROW); }
+"=="            { TOKEN(EQ); }
+"!="            { TOKEN(NEQ); }
 "<<="           { TOKEN(SHL_EQ); }
 ">>="           { TOKEN(SHR_EQ); }
 "+="            { TOKEN(ADD_EQ); }
@@ -74,19 +77,24 @@ ID         [A-Za-z_][A-Za-z0-9_]*
 "*="            { TOKEN(MUL_EQ); }
 "/="            { TOKEN(DIV_EQ); }
 "%="            { TOKEN(MOD_EQ); }
-"&="            { TOKEN(AND_EQ); }
-"|="            { TOKEN(OR_EQ); }
-"^="            { TOKEN(XOR_EQ); }
-"~="            { TOKEN(TILDE_EQ); }
+"&="            { TOKEN(BITAND_EQ); }
+"|="            { TOKEN(BITOR_EQ); }
+"^="            { TOKEN(BITXOR_EQ); }
+"~="            { TOKEN(BITNOT_EQ); }
 "<<"            { TOKEN(SHL); }
 ">>"            { TOKEN(SHR); }
 
  /* Single-character tokens */
-"="             { TOKEN(EQ); }
-"&"             { TOKEN(AMP); }
-"|"             { TOKEN(BAR); }
-"^"             { TOKEN(CARET); }
-"~"             { TOKEN(TILDE); }
+"+"             { TOKEN(PLUS); }
+"-"             { TOKEN(MINUS); }
+"*"             { TOKEN(MUL); }
+"/"             { TOKEN(DIV); }
+"%"             { TOKEN(MOD); }
+"="             { TOKEN(ASSIGN); }
+"&"             { TOKEN(BITAND); }
+"|"             { TOKEN(BITOR); }
+"^"             { TOKEN(BITXOR); }
+"~"             { TOKEN(BITNOT); }
 ","             { TOKEN(COMMA); }
 "("             { TOKEN(LPAREN); }
 ")"             { TOKEN(RPAREN); }
