@@ -7,7 +7,7 @@ It takes a single file as an argument and tokenizes it.
 The tokens and the corresponding token texts are printed to
 standard output.
 
-Th lexer can be built using the following command
+The lexer can be built using the following command
 ```
 make
 ```
