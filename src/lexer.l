@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "yacc.hpp"
 
 #define TAB_WIDTH 4
 
@@ -44,6 +45,7 @@ static void update_position(const char* text, int length,
         yytext = (char*)"\\n"; \
     } \
     printf("%-10s %-10s (%d:%d-%d:%d)\n", #name, yytext, sl, sc, el, ec); \
+    return yy::parser::token::name; \
 } while(0)
 %}
 
@@ -108,11 +110,11 @@ ID         [A-Za-z_][A-Za-z0-9_]*
 "\n"            { TOKEN(NEWLINE); }
 
  /* Numeric literals */
-{DIGIT}+"."{DIGIT}*([eE][+-]?{DIGIT}+)?  { TOKEN(FLOAT); }
-{DIGIT}+([eE][+-]?{DIGIT}+)?             { TOKEN(INT); }
+{DIGIT}+"."{DIGIT}*([eE][+-]?{DIGIT}+)?  { TOKEN(FLOAT_LITERAL); }
+{DIGIT}+([eE][+-]?{DIGIT}+)?             { TOKEN(INT_LITERAL); }
 
  /* String literals */
-\"(\\.|[^"\\\n])*\"                      { TOKEN(STRING); }
+\"(\\.|[^"\\\n])*\"                      { TOKEN(STRING_LITERAL); }
 
  /* Identifiers */
 {ID}                                     { TOKEN(IDENT); }
@@ -126,7 +128,7 @@ ID         [A-Za-z_][A-Za-z0-9_]*
 [ \t\r]+                               { int sl, sc, el, ec; update_position(yytext, yyleng, sl, sc, el, ec); }
 
  /* All other characters */
-.                                       { TOKEN(UNKNOWN); }
+.                                       { printf("Syntax error\n"); }
 
 %%
 

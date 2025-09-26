@@ -1,11 +1,11 @@
 %language "c++"       /* tell bison to use C++ mode */
+%require "3.2"
+%skeleton "lalr1.cc"
 
 %{
-    #include<iostream>
+    #include <iostream>
     #include <fstream>
     #include <string>
-
-
 %}
 
 %code requires {
@@ -18,29 +18,38 @@
                                          yy::Parser::location_type* yylloc);
 }
 
-%left OR
+%left OR                // lowest precedence
 %left AND
 %left BITOR
 %left BITXOR
 %left BITAND
+%nonassoc EQ NEQ        // comparison operators
+%nonassoc LT LE GT GE
 %left SHL SHR
 %left PLUS MINUS
 %left MUL DIV MOD
-%right NOT UPLUS UMINUS
-%right DOT LBRACKET RPAREN
+%right NOT UPLUS UMINUS  // unary operators
+%left POSTFIX
+
 
 %token STRUCT FN LET IF ELSE WHILE FOR IN BREAK CONTINUE RETURN
+%token NEWLINE
 
 %token ASSIGN ADD_EQ SUB_EQ MUL_EQ DIV_EQ MOD_EQ
 %token BITAND_EQ BITOR_EQ BITXOR_EQ BITNOT_EQ
+%token SHR_EQ SHL_EQ
+%token BITAND BITOR BITXOR BITNOT
 
 %token EQ NEQ LT LE GT GE
 
 %token COMMA COLON SEMI ARROW
 
+%token LPAREN RPAREN
+%token LBRACKET RBRACKET
 %token LBRACE RBRACE   /* { } */
+%token DOT
 
-%token ident
+%token IDENT
 
 %token <int> INT_LITERAL
 %token <double> FLOAT_LITERAL
@@ -65,7 +74,7 @@ declaration
 
 /* Structs */
 struct_definition
-    : STRUCT ident LBRACE struct_field_list RBRACE
+    : STRUCT IDENT LBRACE struct_field_list RBRACE
     ;
 
 struct_field_list
@@ -74,13 +83,13 @@ struct_field_list
     ;
 
 struct_field
-    : ident COLON type
+    : IDENT COLON type
     ;
 
 
 /* Functions */
 function_definition
-    : FN ident LPAREN parameter_list_optional RPAREN return_type_optional block
+    : FN IDENT LPAREN parameter_list_optional RPAREN return_type_optional block
     ;
 
 parameter_list_optional
@@ -94,7 +103,7 @@ parameter_list
     ;
 
 parameter
-    : ident COLON type
+    : IDENT COLON type
     ;
 
 return_type_optional
@@ -104,7 +113,7 @@ return_type_optional
 
 /* Variables */
 variable_definition
-    : LET ident type_optional ASSIGN expression SEMI
+    : LET IDENT type_optional ASSIGN expression SEMI
     ;
 
 
@@ -116,7 +125,7 @@ block
 /* Statements */
 statement_list
     : 
-    | statement_list statement
+    | statement_list NEWLINE statement
     ; 
 
 statement
@@ -134,12 +143,12 @@ statement
 
 
 variable_decl_stmt
-    : LET ident type_optional ASSIGN expression
+    : LET IDENT type_optional ASSIGN expression
     ; 
 
 
 assignment_stmt
-    : ident assignment_op expression
+    : IDENT assignment_op expression
     ;
 
 assignment_op
@@ -173,7 +182,7 @@ while_loop_stmt
 
 
 for_loop_stmt
-    : FOR ident IN expression block
+    : FOR IDENT IN expression block
     ;
 
 
@@ -190,8 +199,7 @@ return_stmt
     ;
 
 expression_optional
-    : 
-    | expression
+    : expression
     ;
 
 
@@ -218,19 +226,18 @@ expression
     ;
 
 unary_expression
-    : NOT unary_expression
-    | PLUS unary_expression %prec UPLUS
-    | MINUS unary_expression %prec UMINUS
+    : PLUS expression %prec UPLUS
+    | MINUS expression %prec UMINUS
+    | NOT expression
     | postfix_expression
-
+    ;
 
 postfix_expression
     : primary_expression
-    | postfix_expression LPAREN argument_list_optional RPAREN
-    | postfix_expression LBRACKET expression RBRACKET
-    | postfix_expression DOT ident
+    | postfix_expression LPAREN argument_list_optional RPAREN %prec POSTFIX
+    | postfix_expression LBRACKET expression RBRACKET %prec POSTFIX
+    | postfix_expression DOT IDENT %prec POSTFIX
     ;
-
 
 primary_expression
     : literal
@@ -259,7 +266,7 @@ type_optional
     ; 
 
 type
-    : ident
+    : IDENT
     | LBRACKET type array_size_optional RBRACKET
     ;
 
@@ -270,12 +277,12 @@ array_size_optional
     
 numeric
     : INT_LITERAL
-    | ident
+    | IDENT
     ;
 %%
 
 int main() {
-    Parser parser;
+    yy:Parser parser;
     return parser.parse();
 }
 
