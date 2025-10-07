@@ -1,21 +1,21 @@
 # Project Makefile
 
 # Compiler and tools
-CXX = g++
+CXX = gcc
 LEX = flex
 YACC = bison
 
 # Flags
-CXXFLAGS = -Wall -std=c++11
+CXXFLAGS = -Wall
 
 # Sources
 LEX_SRC = src/lexer.l
 YACC_SRC = src/yacc.y
 
 # Generated files
-LEX_CPP = src/lexer.cpp
-YACC_CPP = src/yacc.cpp
-YACC_HPP = src/yacc.hpp
+LEX_CPP = src/lexer.c
+YACC_CPP = src/yacc.c
+YACC_HPP = src/yacc.h
 
 # Output binary
 BUILD_DIR = build
@@ -27,7 +27,7 @@ all: $(TARGET)
 # Build the final executable
 $(TARGET): $(LEX_CPP) $(YACC_CPP)
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(LEX_CPP) $(YACC_CPP) -o $(TARGET)
+	$(CXX) $(CXXFLAGS) src/parse_tree.c $(LEX_CPP) $(YACC_CPP) -o $(TARGET)
 
 # Generate lexer from Flex
 $(LEX_CPP): $(LEX_SRC) $(YACC_HPP)
