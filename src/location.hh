@@ -53,8 +53,9 @@
 #  endif
 # endif
 
+#line 5 "src/yacc.y"
 namespace yy {
-#line 58 "src/location.hh"
+#line 59 "src/location.hh"
 
   /// A point in a source file.
   class position
@@ -298,7 +299,8 @@ namespace yy {
     return ostr;
   }
 
+#line 5 "src/yacc.y"
 } // yy
-#line 303 "src/location.hh"
+#line 305 "src/location.hh"
 
 #endif // !YY_YY_SRC_LOCATION_HH_INCLUDED

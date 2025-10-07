@@ -2,7 +2,12 @@
 %require "3.2"
 %skeleton "lalr1.cc"
 
+%define api.namespace {yy}
+%define api.token.constructor
 %define api.value.type variant
+
+%define parse.error verbose
+
 %define api.prefix {yy}   // optional, good to avoid naming conflicts
 
 %{
@@ -112,7 +117,9 @@ program
     ;
 
 declaration_list
-    :
+    : /* empty */ {
+        $$ = new parse_tree_node("declaration_list");
+    }
     | declaration_list declaration {
         $$ = new parse_tree_node("declaration_list");
         $$->add_child($1);
@@ -140,7 +147,7 @@ struct_definition
     : STRUCT IDENT LBRACE struct_field_list RBRACE {
         $$ = new parse_tree_node("struct_definition");
         $$->add_child(new parse_tree_node("STRUCT"));
-        $$->add_child(new parse_tree_node(*$2));       // wrap IDENT string
+        $$->add_child(new parse_tree_node($2));       // wrap IDENT string
         $$->add_child(new parse_tree_node("{"));
         $$->add_child($4);                             // struct_field_list is already a node
         $$->add_child(new parse_tree_node("}"));
@@ -160,7 +167,7 @@ struct_field_list
 struct_field
     : IDENT COLON type {
         $$ = new parse_tree_node("struct_field");
-        $$->add_child(new parse_tree_node(*$1));
+        $$->add_child(new parse_tree_node($1));
         $$->add_child(new parse_tree_node(":"));
         if ($3) $$->add_child($3);
     }
@@ -171,7 +178,7 @@ function_definition
     : FN IDENT LPAREN parameter_list_optional RPAREN return_type_optional block {
         $$ = new parse_tree_node("function_definition");
         $$->add_child(new parse_tree_node("FN"));
-        $$->add_child(new parse_tree_node(*$2));
+        $$->add_child(new parse_tree_node($2));
         $$->add_child(new parse_tree_node("("));
         if ($4) $$->add_child($4);
         $$->add_child(new parse_tree_node(")"));
@@ -203,7 +210,7 @@ parameter_list
 parameter
     : IDENT COLON type {
         $$ = new parse_tree_node("parameter");
-        $$->add_child(new parse_tree_node(*$1));
+        $$->add_child(new parse_tree_node($1));
         $$->add_child(new parse_tree_node(":"));
         if ($3) $$->add_child($3);
     }
@@ -224,7 +231,7 @@ variable_definition
     : LET IDENT type_optional ASSIGN expression SEMI {
         $$ = new parse_tree_node("variable_definition");
         $$->add_child(new parse_tree_node("LET"));
-        $$->add_child(new parse_tree_node(*$2));
+        $$->add_child(new parse_tree_node($2));
         if ($3) $$->add_child($3);
         $$->add_child(new parse_tree_node("="));
         if ($5) $$->add_child($5);
@@ -300,7 +307,7 @@ variable_decl_stmt
     : LET IDENT type_optional ASSIGN expression {
         $$ = new parse_tree_node("variable_decl_stmt");
         $$->add_child(new parse_tree_node("LET"));
-        $$->add_child(new parse_tree_node(*$2));
+        $$->add_child(new parse_tree_node($2));
         if ($3) $$->add_child($3);
         $$->add_child(new parse_tree_node("="));
         if ($5) $$->add_child($5);
@@ -310,7 +317,7 @@ variable_decl_stmt
 assignment_stmt
     : IDENT assignment_op expression {
         $$ = new parse_tree_node("assignment_stmt");
-        $$->add_child(new parse_tree_node(*$1));
+        $$->add_child(new parse_tree_node($1));
         if ($2) $$->add_child($2);
         if ($3) $$->add_child($3);
     }
@@ -340,7 +347,7 @@ conditional_stmt
     ;
 
 else_clause_optional
-    :
+    :   {$$ = nullptr;}
     | ELSE block {
         $$ = new parse_tree_node("else_clause_optional");
         $$->add_child(new parse_tree_node("ELSE"));
@@ -366,7 +373,7 @@ for_loop_stmt
     : FOR IDENT IN expression block {
         $$ = new parse_tree_node("for_loop_stmt");
         $$->add_child(new parse_tree_node("FOR"));
-        $$->add_child(new parse_tree_node(*$2));
+        $$->add_child(new parse_tree_node($2));
         $$->add_child(new parse_tree_node("IN"));
         if ($4) $$->add_child($4);
         if ($5) $$->add_child($5);
@@ -389,7 +396,7 @@ return_stmt
     ;
 
 expression_optional
-    :
+    :   {$$ = nullptr;}
     | expression { 
         $$ = new parse_tree_node("expression_optional");
         $$->add_child($1); 
@@ -514,7 +521,7 @@ unary_expression
         if ($2) $$->add_child($2);
     }
     | MINUS expression %prec UMINUS {
-        $$ = new new parse_tree_node("unary_minus");
+        $$ = new parse_tree_node("unary_minus");
         if ($2) $$->add_child($2);
     }
     | NOT expression {
@@ -547,7 +554,7 @@ postfix_expression
         $$ = new parse_tree_node("postfix_expression");
         if ($1) $$->add_child($1);
         $$->add_child(new parse_tree_node(".")); 
-        $$->add_child(new parse_tree_node(*$3));
+        $$->add_child(new parse_tree_node($3));
     }
     ;
 
@@ -567,11 +574,11 @@ primary_expression
 literal
     : INT_LITERAL { $$ = new parse_tree_node(std::to_string($1)); }
     | FLOAT_LITERAL { $$ = new parse_tree_node(std::to_string($1)); }
-    | STRING_LITERAL { $$ = new parse_tree_node(*$1); }
+    | STRING_LITERAL { $$ = new parse_tree_node($1); }
     ;
 
 argument_list_optional
-    :
+    :   {$$ = nullptr;}
     | argument_list {
         $$ = new parse_tree_node("argument_list_optional");
         if ($1) $$->add_child($1);
@@ -584,15 +591,14 @@ argument_list
         if ($1) $$->add_child($1);
     }
     | argument_list COMMA expression {
-        $$ = new parse_tree_node("argument_list");
-        if ($1) $$->add_child($1);
+        $$ = $1;
         $$->add_child(new parse_tree_node(","));
         if ($3) $$->add_child($3);
     }
     ;
 
 type_optional
-    :
+    :   {$$ = nullptr;}
     | type {
         $$ = new parse_tree_node("type_optional");
         if ($1) $$->add_child($1);
@@ -602,7 +608,7 @@ type_optional
 type
     : IDENT {
         $$ = new parse_tree_node("type");
-        $$->add_child(new parse_tree_node(*$1));
+        $$->add_child(new parse_tree_node($1));
     }
     | LBRACKET type array_size_optional RBRACKET {
         $$ = new parse_tree_node("type");
@@ -614,7 +620,7 @@ type
     ;
 
 array_size_optional
-    :
+    :   {$$ = nullptr;}
     | SEMI numeric {
         $$ = new parse_tree_node("array_size_optional");
         $$->add_child(new parse_tree_node(";"));
@@ -624,7 +630,7 @@ array_size_optional
 
 numeric
     : INT_LITERAL { $$ = new parse_tree_node(std::to_string($1)); }
-    | IDENT { $$ = new parse_tree_node(*$1); }
+    | IDENT { $$ = new parse_tree_node($1); }
     ;
 %%
 

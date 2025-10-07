@@ -37,7 +37,7 @@ static void update_position(const char* text, int length,
 
 // Macro for emitting a token.
 // Updates position and prints the token.
-// TODO: When a parser is added, return token instead of printing it
+// TODO: When a parser is added, return token instead of printing it (done)
 #define TOKEN(name) do { \
     int sl, sc, el, ec; \
     update_position(yytext, yyleng, sl, sc, el, ec); \
@@ -54,70 +54,70 @@ ID         [A-Za-z_][A-Za-z0-9_]*
 
 %%
  /* Keywords */
-"let"           { TOKEN(LET); }
-"if"            { TOKEN(IF); }
-"else"          { TOKEN(ELSE); }
-"for"           { TOKEN(FOR); }
-"in"            { TOKEN(IN); }
-"break"         { TOKEN(BREAK); }
-"continue"      { TOKEN(CONTINUE); }
-"return"        { TOKEN(RETURN); }
-"fn"            { TOKEN(FN); }
-"struct"        { TOKEN(STRUCT); }
-"and"           { TOKEN(AND); }
-"or"            { TOKEN(OR); }
-"not"           { TOKEN(NOT); }
+"let"           { return yy::parser::make_LET(LET); }
+"if"            { return yy::parser::make_IF(); }
+"else"          { return yy::parser::make_ELSE(); }
+"for"           { return yy::parser::make_FOR(); }
+"in"            { return yy::parser::make_IN(); }
+"break"         { return yy::parser::make_BREAK(); }
+"continue"      { return yy::parser::make_CONTINUE(); }
+"return"        { return yy::parser::make_RETURN(); }
+"fn"            { return yy::parser::make_FN(); }
+"struct"        { return yy::parser::make_STRUCT(); }
+"and"           { return yy::parser::make_AND(); }
+"or"            { return yy::parser::make_OR(); }
+"not"           { return yy::parser::make_NOT(); }
 
  /* Multi-character tokens */
-"->"            { TOKEN(ARROW); }
-"=="            { TOKEN(EQ); }
-"!="            { TOKEN(NEQ); }
-"<<="           { TOKEN(SHL_EQ); }
-">>="           { TOKEN(SHR_EQ); }
-"+="            { TOKEN(ADD_EQ); }
-"-="            { TOKEN(SUB_EQ); }
-"*="            { TOKEN(MUL_EQ); }
-"/="            { TOKEN(DIV_EQ); }
-"%="            { TOKEN(MOD_EQ); }
-"&="            { TOKEN(BITAND_EQ); }
-"|="            { TOKEN(BITOR_EQ); }
-"^="            { TOKEN(BITXOR_EQ); }
-"~="            { TOKEN(BITNOT_EQ); }
-"<<"            { TOKEN(SHL); }
-">>"            { TOKEN(SHR); }
+"->"            { return yy::parser::make_ARROW(); }
+"=="            { return yy::parser::make_EQ(); }
+"!="            { return yy::parser::make_NEQ(); }
+"<<="           { return yy::parser::make_SHL_EQ(); }
+">>="           { return yy::parser::make_SHR_EQ(); }
+"+="            { return yy::parser::make_ADD_EQ(); }
+"-="            { return yy::parser::make_SUB_EQ(); }
+"*="            { return yy::parser::make_MUL_EQ(); }
+"/="            { return yy::parser::make_DIV_EQ(); }
+"%="            { return yy::parser::make_MOD_EQ(); }
+"&="            { return yy::parser::make_BITAND_EQ(); }
+"|="            { return yy::parser::make_BITOR_EQ(); }
+"^="            { return yy::parser::make_BITXOR_EQ(); }
+"~="            { return yy::parser::make_BITNOT_EQ(); }
+"<<"            { return yy::parser::make_SHL(); }
+">>"            { return yy::parser::make_SHR(); }
 
  /* Single-character tokens */
-"+"             { TOKEN(PLUS); }
-"-"             { TOKEN(MINUS); }
-"*"             { TOKEN(MUL); }
-"/"             { TOKEN(DIV); }
-"%"             { TOKEN(MOD); }
-"="             { TOKEN(ASSIGN); }
-"&"             { TOKEN(BITAND); }
-"|"             { TOKEN(BITOR); }
-"^"             { TOKEN(BITXOR); }
-"~"             { TOKEN(BITNOT); }
-","             { TOKEN(COMMA); }
-"("             { TOKEN(LPAREN); }
-")"             { TOKEN(RPAREN); }
-"{"             { TOKEN(LBRACE); }
-"}"             { TOKEN(RBRACE); }
-"["             { TOKEN(LBRACKET); }
-"]"             { TOKEN(RBRACKET); }
-";"             { TOKEN(SEMI); }
-":"             { TOKEN(COLON); }
-"."             { TOKEN(DOT); }
-"\n"            { TOKEN(NEWLINE); }
+"+"             { return yy::parser::make_PLUS(); }
+"-"             { return yy::parser::make_MINUS(); }
+"*"             { return yy::parser::make_MUL(); }
+"/"             { return yy::parser::make_DIV(); }
+"%"             { return yy::parser::make_MOD(); }
+"="             { return yy::parser::make_ASSIGN(); }
+"&"             { return yy::parser::make_BITAND(); }
+"|"             { return yy::parser::make_BITOR(); }
+"^"             { return yy::parser::make_BITXOR(); }
+"~"             { return yy::parser::make_BITNOT(); }
+","             { return yy::parser::make_COMMA(); }
+"("             { return yy::parser::make_LPAREN(); }
+")"             { return yy::parser::make_RPAREN(); }
+"{"             { return yy::parser::make_LBRACE(); }
+"}"             { return yy::parser::make_RBRACE(); }
+"["             { return yy::parser::make_LBRACKET(); }
+"]"             { return yy::parser::make_RBRACKET(); }
+";"             { return yy::parser::make_SEMI(); }
+":"             { return yy::parser::make_COLON(); }
+"."             { return yy::parser::make_DOT(); }
+"\n"            { return yy::parser::make_NEWLINE(); }
 
  /* Numeric literals */
-{DIGIT}+"."{DIGIT}*([eE][+-]?{DIGIT}+)?  { TOKEN(FLOAT_LITERAL); }
-{DIGIT}+([eE][+-]?{DIGIT}+)?             { TOKEN(INT_LITERAL); }
+{DIGIT}+"."{DIGIT}*([eE][+-]?{DIGIT}+)?  { return yy::parser::make_FLOAT_LITERAL(std::stod(yytext)); }
+{DIGIT}+([eE][+-]?{DIGIT}+)?             { return yy::parser::make_INT_LITERAL(std::stoi(yytext)); }
 
  /* String literals */
-\"(\\.|[^"\\\n])*\"                      { TOKEN(STRING_LITERAL); }
+\"(\\.|[^"\\\n])*\"                      { return yy::parser::make_STRING_LITERAL(yytext); } //with ""
 
  /* Identifiers */
-{ID}                                     { TOKEN(IDENT); }
+{ID}                                     { return yy::parser::make_IDENT(yytext); } //with ""
 
  /* Comments */
 "/"\*([^*]|\*+[^*/])*\*+"/"              { /* block comment */ }
