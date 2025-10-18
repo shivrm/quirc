@@ -109,7 +109,7 @@ ID [A-Za-z_][A-Za-z0-9_]*
 "."     { TOKEN(DOT); }
 "<"     { TOKEN(LT); }
 ">"     { TOKEN(GT); }
-"\n"    { TOKEN(NEWLINE); }
+ /* "\n"    { TOKEN(NEWLINE); } */
 
 {DIGIT}+"."{DIGIT}*([eE][+-]?{DIGIT}+)? { 
     yylval.float_val = atof(yytext); 

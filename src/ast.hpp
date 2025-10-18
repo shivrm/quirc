@@ -46,94 +46,170 @@ enum UnaryOp {
 
 struct ASTNode {
     virtual ~ASTNode() = default;
-    virtual void accept(Visitor& v) = 0;
+    virtual void accept(Visitor &v) = 0;
 };
 
-struct Definition: ASTNode {};
-struct Statement: ASTNode {};
-struct Expr: ASTNode {};
+struct Definition : ASTNode { };
+struct Statement : ASTNode { };
+struct Expr : ASTNode { };
 
-struct Program: ASTNode {
+struct Program : ASTNode {
     std::vector<std::unique_ptr<Definition>> body;
+    void accept(Visitor &v) override;
 };
 
-struct StructDefn: Definition {
+struct StructDefn : Definition {
     std::string name;
     std::vector<std::pair<std::string, Type>> fields;
+    void accept(Visitor &v) override;
 };
 
-struct FunctionDefn: Definition {
+struct FunctionDefn : Definition {
     std::string name;
     std::vector<std::pair<std::string, Type>> args;
     std::optional<Type> return_type;
     std::vector<std::unique_ptr<Statement>> body;
+    void accept(Visitor &v) override;
 };
 
-struct VariableDefn: Definition {
+struct VariableDefn : Definition {
     std::string name;
     std::optional<Type> type;
     std::unique_ptr<Expr> value;
+    void accept(Visitor &v) override;
 };
 
-struct ReturnStmt: Statement {
+struct ReturnStmt : Statement {
     std::optional<std::unique_ptr<Expr>> value;
+    void accept(Visitor &v) override;
 };
-struct BreakStmt: Statement {};
-struct ContinueStmt: Statement {};
+struct BreakStmt : Statement {
+    void accept(Visitor &v) override;
+};
+struct ContinueStmt : Statement {
+    void accept(Visitor &v) override;
+};
 
-struct LetStmt: Statement {
+struct LetStmt : Statement {
     std::string name;
     std::optional<Type> type;
     std::unique_ptr<Expr> value;
+    void accept(Visitor &v) override;
 };
 
-struct IfElse: Statement {
+struct IfElse : Statement {
     std::unique_ptr<Expr> condition;
     std::vector<std::unique_ptr<Statement>> body;
     std::vector<std::unique_ptr<Statement>> else_body;
+    void accept(Visitor &v) override;
 };
 
-struct ForLoop: Statement {
+struct ForLoop : Statement {
     std::string var;
     std::vector<std::unique_ptr<Statement>> body;
+    void accept(Visitor &v) override;
 };
 
-struct WhileLoop: Statement {
+struct WhileLoop : Statement {
     std::unique_ptr<Expr> condition;
     std::vector<std::unique_ptr<Statement>> body;
+    void accept(Visitor &v) override;
 };
 
-struct BinaryExpr: Expr {
+struct BinaryExpr : Expr {
     std::unique_ptr<Expr> left, right;
     BinaryOp op;
+    void accept(Visitor &v) override;
 };
 
-struct UnaryExpr: Expr {
+struct UnaryExpr : Expr {
     std::unique_ptr<Expr> operand;
-    UnaryOp op;   
+    UnaryOp op;
+    void accept(Visitor &v) override;
 };
 
-struct CallExpr: Expr {
+struct CallExpr : Expr {
     std::unique_ptr<Expr> function;
     std::vector<std::unique_ptr<Expr>> args;
+    void accept(Visitor &v) override;
 };
 
-struct IndexExpr: Expr {
+struct IndexExpr : Expr {
     std::unique_ptr<Expr> container, index;
+    void accept(Visitor &v) override;
 };
 
-struct MemberExpr: Expr {
+struct MemberExpr : Expr {
     std::unique_ptr<Expr> container;
     std::string member;
+    void accept(Visitor &v) override;
 };
 
-struct Ident: Expr {
+struct Ident : Expr {
     std::string name;
+    void accept(Visitor &v) override;
 };
 
-struct IntLiteral: Expr { int value; };
-struct FloatLiteral: Expr { double value; };
-struct StringLiteral: Expr { std::string value; };
-struct ArrayLiteral: Expr {
-    std::vector<Expr> elems;
+struct IntLiteral : Expr {
+    int value;
+    void accept(Visitor &v) override;
 };
+struct FloatLiteral : Expr {
+    double value;
+    void accept(Visitor &v) override;
+};
+struct StringLiteral : Expr {
+    std::string value;
+    void accept(Visitor &v) override;
+};
+struct ArrayLiteral : Expr {
+    std::vector<Expr> elems;
+    void accept(Visitor &v) override;
+};
+
+struct Visitor {
+    virtual void visit(Program &f) = 0;
+    virtual void visit(StructDefn &f) = 0;
+    virtual void visit(FunctionDefn &f) = 0;
+    virtual void visit(VariableDefn &f) = 0;
+    virtual void visit(ReturnStmt &f) = 0;
+    virtual void visit(BreakStmt &f) = 0;
+    virtual void visit(ContinueStmt &f) = 0;
+    virtual void visit(LetStmt &f) = 0;
+    virtual void visit(IfElse &f) = 0;
+    virtual void visit(ForLoop &f) = 0;
+    virtual void visit(WhileLoop &f) = 0;
+    virtual void visit(BinaryExpr &f) = 0;
+    virtual void visit(UnaryExpr &f) = 0;
+    virtual void visit(CallExpr &f) = 0;
+    virtual void visit(IndexExpr &f) = 0;
+    virtual void visit(MemberExpr &f) = 0;
+    virtual void visit(Ident &f) = 0;
+    virtual void visit(IntLiteral &f) = 0;
+    virtual void visit(FloatLiteral &f) = 0;
+    virtual void visit(StringLiteral &f) = 0;
+    virtual void visit(ArrayLiteral &f) = 0;
+};
+
+void Program::accept(Visitor &v) { v.visit(*this); }
+void Program::accept(Visitor &v) { v.visit(*this); }
+void StructDefn::accept(Visitor &v) { v.visit(*this); }
+void FunctionDefn::accept(Visitor &v) { v.visit(*this); }
+void VariableDefn::accept(Visitor &v) { v.visit(*this); }
+void ReturnStmt::accept(Visitor &v) { v.visit(*this); }
+void BreakStmt::accept(Visitor &v) { v.visit(*this); }
+void ContinueStmt::accept(Visitor &v) { v.visit(*this); }
+void LetStmt::accept(Visitor &v) { v.visit(*this); }
+void IfElse::accept(Visitor &v) { v.visit(*this); }
+void ForLoop::accept(Visitor &v) { v.visit(*this); }
+void WhileLoop::accept(Visitor &v) { v.visit(*this); }
+void BinaryExpr::accept(Visitor &v) { v.visit(*this); }
+void UnaryExpr::accept(Visitor &v) { v.visit(*this); }
+void CallExpr::accept(Visitor &v) { v.visit(*this); }
+void IndexExpr::accept(Visitor &v) { v.visit(*this); }
+void MemberExpr::accept(Visitor &v) { v.visit(*this); }
+void Ident::accept(Visitor &v) { v.visit(*this); }
+void IntLiteral::accept(Visitor &v) { v.visit(*this); }
+void FloatLiteral::accept(Visitor &v) { v.visit(*this); }
+void StringLiteral::accept(Visitor &v) { v.visit(*this); }
+void ArrayLiteral::accept(Visitor &v) { v.visit(*this); }
