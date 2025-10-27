@@ -1,6 +1,6 @@
-#line 1 "src/lexer.c"
+#line 2 "src/lexer.c"
 
-#line 3 "src/lexer.c"
+#line 4 "src/lexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -598,8 +598,8 @@ static void update_position(const char* text, int length,
     return name; \
 }
 
-#line 601 "src/lexer.c"
 #line 602 "src/lexer.c"
+#line 603 "src/lexer.c"
 
 #define INITIAL 0
 
@@ -819,7 +819,7 @@ YY_DECL
 #line 54 "src/lexer.l"
 
 
-#line 822 "src/lexer.c"
+#line 823 "src/lexer.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1218,7 +1218,7 @@ YY_RULE_SETUP
 #line 144 "src/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1221 "src/lexer.c"
+#line 1222 "src/lexer.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

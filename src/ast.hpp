@@ -11,7 +11,7 @@ struct AtomType {
 };
 
 struct ArrayType {
-    std::unique_ptr<Type> elementType;
+    std::unique_ptr<Type> element_type;
 };
 
 using Type = std::variant<AtomType, ArrayType>;
@@ -191,7 +191,6 @@ struct Visitor {
     virtual void visit(ArrayLiteral &f) = 0;
 };
 
-void Program::accept(Visitor &v) { v.visit(*this); }
 void Program::accept(Visitor &v) { v.visit(*this); }
 void StructDefn::accept(Visitor &v) { v.visit(*this); }
 void FunctionDefn::accept(Visitor &v) { v.visit(*this); }
