@@ -6,15 +6,16 @@
 
 struct Visitor;
 
-struct AtomType {
+struct Type {
+};
+
+struct AtomType: Type {
     std::string name;
 };
 
-struct ArrayType {
+struct ArrayType: Type {
     std::unique_ptr<Type> element_type;
 };
-
-using Type = std::variant<AtomType, ArrayType>;
 
 enum BinaryOp {
     ADD,

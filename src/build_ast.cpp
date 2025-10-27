@@ -1,6 +1,55 @@
-#include <parse_tree.h>
+extern "C" {
+#include "parse_tree.h"
+}
 #include "ast.hpp"
 #include <vector>
+
+/*
+Type convert_type(parse_tree_node *node) {
+    if (strcmp(node->children[0]->value, "[") == 0) {
+        ArrayType type = {
+            .element_type = std::make_unique<Type>(convert_type(node->children[1]))
+        };
+        return type;
+    } else {
+        AtomType type = {
+            .name = std::string(node->children[0]->value)
+        };
+        return type;
+    }
+}
+
+std::unique_ptr<FunctionDefn> convert_function(parse_tree_node *node) {
+    std::vector<std::pair<std::string, Type>> args;
+    auto param_list = node->children[3]->children[0];
+
+    for (int i = 0; i < param_list->num_children; i++) {
+        auto param = param_list->children[i];
+        std::string name = param->children[0]->value;
+        Type type = convert_type(param->children[2]);
+        auto p = make_pair(name, type);
+        args.push_back(p);
+    }
+
+    FunctionDefn f;
+    f.name = std::string(node->children[1]->value);
+    f.args = std::move(args);
+
+    return std::make_unique<FunctionDefn>(std::move(f));
+}
+
+std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
+    std::string node_type = node->children[0]->value;
+
+    return convert_function(node->children[0]);
+}
+*/
+
+std::unique_ptr<Program> convert_program(parse_tree_node *node);
+std::unique_ptr<Definition> convert_definition(parse_tree_node *node);
+Type convert_type(parse_tree_node *node);
+
+
 
 std::unique_ptr<Program> convert_program(parse_tree_node *node) {
     std::vector<std::unique_ptr<Definition>> nodes;
@@ -11,10 +60,9 @@ std::unique_ptr<Program> convert_program(parse_tree_node *node) {
         nodes.push_back(convert_definition(child));
     }   
 
-    std::unique_ptr<Program> program;
-    program->body=nodes;
-
-    return program;
+    Program p;
+    p.body = std::move(nodes);
+    return std::make_unique<Program>(std::move(p));
 }
 
 std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
@@ -37,8 +85,10 @@ std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
             struct_attribute =  {struct_attr_name->value, convert_type(struct_attr_type)};
             ast_struct_attr_list.push_back(struct_attribute);
         }
-        
-        result_node = std::make_unique<StructDefn>(name, ast_struct_attr_list);
+        StructDefn s;
+        s.name = name;
+        s.fields= std::move(ast_struct_attr_list);
+        result_node = std::make_unique<StructDefn>(std::move(s));
     } else if (child->value == "function_definition") {
         std::string name = child->children[1]->value;
         std::vector<std::pair<std::string, Type>> ast_func_param_list;
@@ -70,4 +120,17 @@ Type convert_type(parse_tree_node *node) {
         };
         return type;
     }
+}
+
+extern "C" parse_tree_node *get_parse_tree();
+extern "C" int yyparse();
+
+int main(void) {
+    int result = yyparse();
+    parse_tree_node *root = get_parse_tree();
+    if (root) {
+        print_tree(root);
+        free_tree(root);
+    }
+    return result;
 }

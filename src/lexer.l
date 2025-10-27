@@ -2,6 +2,8 @@
 %option noyywrap
 
 %{
+#define YY_NO_MAIN
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +24,6 @@ static void update_position(const char* text, int length,
     
     for (int i = 0; i < length; i++) {
         if (text[i] == '\n') {
-            yylineno++;
             yycolumn = 1;
         } else if (text[i] == '\t') {
             yycolumn += TAB_WIDTH;
@@ -134,7 +135,7 @@ ID [A-Za-z_][A-Za-z0-9_]*
 "/*"([^*]|\*+[^*/])*\*+"/" { /* block comment */ }
 "//"[^\n]*                   { /* line comment */ }
 
-[ \t\r]+ { 
+[ \t\r\n]+ { 
     int sl, sc, el, ec; 
     update_position(yytext, yyleng, &sl, &sc, &el, &ec); 
 }

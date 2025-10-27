@@ -16,6 +16,11 @@ extern char* yytext;
 void yyerror(const char *msg);
 
 parse_tree_node* root = NULL;
+
+parse_tree_node *get_parse_tree() {
+    return root;
+}
+
 %}
 
 %union {
@@ -53,6 +58,7 @@ parse_tree_node* root = NULL;
 %type <node> declaration_list
 %type <node> declaration
 %type <node> struct_definition
+%type <node> struct_field_list_optional
 %type <node> struct_field_list
 %type <node> struct_field
 %type <node> function_definition
@@ -138,7 +144,7 @@ declaration
 
 /* Structs */
 struct_definition
-    : STRUCT IDENT LBRACE struct_field_list RBRACE {
+    : STRUCT IDENT LBRACE struct_field_list_optional RBRACE {
         $$ = create_node("struct_definition");
         add_child($$, create_node("STRUCT"));
         add_child($$, create_node($2));
@@ -149,8 +155,17 @@ struct_definition
     }
     ;
 
+struct_field_list_optional
+    : /* empty */ {
+        $$ = create_node("struct_field_list");
+    }
+    | struct_field_list {
+        $$ = $1;
+    }
+    ;
+
 struct_field_list
-    : struct_field /* empty */ {
+    : struct_field {
         $$ = create_node("struct_field_list");
         if ($1) add_child($$, $1);
     }
@@ -400,8 +415,7 @@ return_stmt
     ;
 
 expression_optional
-    : /* empty */ { $$ = NULL; }
-    | expression {
+    : expression {
         $$ = create_node("expression_optional");
         add_child($$, $1);
     }
@@ -620,9 +634,9 @@ argument_list
 
 type_optional
     : /* empty */ { $$ = NULL; }
-    | type {
+    | COLON type {
         $$ = create_node("type_optional");
-        if ($1) add_child($$, $1);
+        if ($2) add_child($$, $2);
     }
     ;
 
@@ -666,13 +680,4 @@ numeric
 
 void yyerror(const char *msg) {
     fprintf(stderr, "Error at line %d: %s\n", yylineno, msg);
-}
-
-int main(void) {
-    int result = yyparse();
-    if (root) {
-        print_tree(root);
-        free_tree(root);
-    }
-    return result;
 }

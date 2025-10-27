@@ -27,15 +27,18 @@ all: $(TARGET)
 # Build the final executable
 $(TARGET): $(LEX_CPP) $(YACC_CPP)
 	mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) src/parse_tree.c $(LEX_CPP) $(YACC_CPP) -o $(TARGET)
+	$(CXX) src/parse_tree.c -c -o build/parse_tree.o
+	g++ build/parse_tree.o build/lexer.o build/yacc.o src/build_ast.cpp -o $(TARGET)
 
 # Generate lexer from Flex
 $(LEX_CPP): $(LEX_SRC) $(YACC_HPP)
 	$(LEX) -o $(LEX_CPP) $(LEX_SRC)
+	$(CXX) $(LEX_CPP) -c -o build/lexer.o
 
 # Generate parser from Bison
 $(YACC_CPP) $(YACC_HPP): $(YACC_SRC)
 	$(YACC) -d -o $(YACC_CPP) $(YACC_SRC)
+	$(CXX) $(YACC_CPP) -c -o build/yacc.o
 
 # Run with example file
 run: $(TARGET)
@@ -45,6 +48,7 @@ run: $(TARGET)
 clean:
 	rm -f $(LEX_CPP) $(YACC_CPP) $(YACC_HPP) $(TARGET)
 	rm -rf $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
 
 .PHONY: all run clean
 
