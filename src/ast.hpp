@@ -98,6 +98,13 @@ struct LetStmt : Statement {
     void accept(Visitor &v) override;
 };
 
+struct AsgnStmt : Statement {
+    std::string name;
+    BinaryOp op;
+    std::unique_ptr<Expr> rhs;
+    void accept(Visitor &v) override;
+};
+
 struct IfElse : Statement {
     std::unique_ptr<Expr> condition;
     std::vector<std::unique_ptr<Statement>> body;
@@ -177,6 +184,7 @@ struct Visitor {
     virtual void visit(BreakStmt &f) = 0;
     virtual void visit(ContinueStmt &f) = 0;
     virtual void visit(LetStmt &f) = 0;
+    virtual void visit(AsgnStmt &f) = 0;
     virtual void visit(IfElse &f) = 0;
     virtual void visit(ForLoop &f) = 0;
     virtual void visit(WhileLoop &f) = 0;
@@ -200,6 +208,7 @@ void ReturnStmt::accept(Visitor &v) { v.visit(*this); }
 void BreakStmt::accept(Visitor &v) { v.visit(*this); }
 void ContinueStmt::accept(Visitor &v) { v.visit(*this); }
 void LetStmt::accept(Visitor &v) { v.visit(*this); }
+void AsgnStmt::accept(Visitor &v) { v.visit(*this); }
 void IfElse::accept(Visitor &v) { v.visit(*this); }
 void ForLoop::accept(Visitor &v) { v.visit(*this); }
 void WhileLoop::accept(Visitor &v) { v.visit(*this); }

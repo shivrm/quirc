@@ -1,2 +1,4 @@
 build
-src/lexer.cpp
+src/lexer.c
+src/yacc.c
+src/yacc.h
