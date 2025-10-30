@@ -45,6 +45,19 @@ enum UnaryOp {
     BITNOT,
 };
 
+enum AssignmentOp {
+    ASSIGN,
+    ADD_EQ,
+    SUB_EQ,
+    MUL_EQ, 
+    DIV_EQ,
+    MOD_EQ,
+    BITAND_EQ,
+    BITOR_EQ,
+    BITXOR_EQ,
+    BITNOT_EQ,
+};
+
 struct ASTNode {
     virtual ~ASTNode() = default;
     virtual void accept(Visitor &v) = 0;
@@ -100,7 +113,7 @@ struct LetStmt : Statement {
 
 struct AsgnStmt : Statement {
     std::string name;
-    BinaryOp op;
+    AssignmentOp op;
     std::unique_ptr<Expr> rhs;
     void accept(Visitor &v) override;
 };
@@ -114,6 +127,7 @@ struct IfElse : Statement {
 
 struct ForLoop : Statement {
     std::string var;
+    std::unique_ptr<Expr> condition;
     std::vector<std::unique_ptr<Statement>> body;
     void accept(Visitor &v) override;
 };

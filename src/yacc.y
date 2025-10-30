@@ -530,7 +530,13 @@ expression
         add_child($$, create_node("%"));
         if ($3) add_child($$, $3);
     }
-    | unary_expression { $$ = $1; }
+    // | unary_expression { $$ = $1; }
+    // Note: this modification was made at AST conversion time, if needed revert to the old 
+    // grammar after modifying the corresponding AST conversion code
+    | unary_expression {
+        $$ = create_node("unary_expression");
+        if ($1) add_child($$, $1);
+    }
     ;
 
 unary_expression
@@ -546,7 +552,13 @@ unary_expression
         $$ = create_node("unary_not");
         if ($2) add_child($$, $2);
     }
-    | postfix_expression { $$ = $1; }
+    // | postfix_expression { $$ = $1; }
+    // Note: this modification was made at AST conversion time, if needed revert to the old 
+    // grammar after modifying the corresponding AST conversion code
+    | postfix_expression {
+        $$ = create_node("postfix_expression");
+        if ($1) add_child($$, $1);
+    }
     ;
 
 postfix_expression

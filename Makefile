@@ -28,7 +28,8 @@ all: $(TARGET)
 $(TARGET): $(LEX_CPP) $(YACC_CPP)
 	mkdir -p $(BUILD_DIR)
 	$(CXX) src/parse_tree.c -c -o build/parse_tree.o
-	g++ build/parse_tree.o build/lexer.o build/yacc.o src/build_ast.cpp -o $(TARGET)
+# g++ build/parse_tree.o build/lexer.o build/yacc.o src/build_ast.cpp -o $(TARGET)
+	g++ build/parse_tree.o build/lexer.o build/yacc.o src/parse_show.cpp -o $(TARGET)
 
 # Generate lexer from Flex
 $(LEX_CPP): $(LEX_SRC) $(YACC_HPP)
