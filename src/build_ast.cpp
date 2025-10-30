@@ -95,7 +95,13 @@ std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
         s.body = ast_func_block;
         result_node = std::make_unique<FunctionDefn>(std::move(s));
 
-    } // Todo: variable definition
+    } else if (child->value == "variable_definition") {
+        VariableDefn s;
+        s.name = child->children[1]->value;
+        if (child->children[2]->num_children != 0)
+            s.type = convert_type(child->children[2]->children[0]);
+        s.value = convert_expression(child->children[4]);
+    }
 
     return result_node;
 }
