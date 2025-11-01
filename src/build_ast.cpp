@@ -4,16 +4,15 @@ extern "C" {
 #include "ast.hpp"
 #include <vector>
 
+std::unique_ptr<Type> convert_type(parse_tree_node *node);
 std::unique_ptr<Program> convert_program(parse_tree_node *node);
 std::unique_ptr<Definition> convert_definition(parse_tree_node *node);
-Type convert_type(parse_tree_node *node);
 std::vector<std::unique_ptr<Statement>> convert_block(parse_tree_node* func_block);
 std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type);
 std::unique_ptr<Statement> convert_stmt_conditional(parse_tree_node* cond_stmt);
 std::unique_ptr<Expr> convert_expression(parse_tree_node* expr);
 std::unique_ptr<Expr> convert_expression_unary(parse_tree_node* expr_type);
 enum AssignmentOp OperandToBinaryOp(std::string value);
-
 
 
 std::unique_ptr<Program> convert_program(parse_tree_node *node) {
@@ -40,16 +39,17 @@ std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
         
         // Get the struct's name and all its attributes
         std::string name = child->children[1]->value;
-        std::vector<std::pair<std::string, Type>> ast_struct_attr_list;
+        std::vector<std::pair<std::string, std::unique_ptr<Type>>> ast_struct_attr_list;
         parse_tree_node* struct_attr_list = child->children[3];
 
         for (int i = 0; i < struct_attr_list->num_children; i++) {
-            std::pair<std::string, Type> ast_struct_attribute;
+            std::pair<std::string, std::unique_ptr<Type>> ast_struct_attribute;
             parse_tree_node* struct_attr_name = struct_attr_list->children[i]->children[0];
             parse_tree_node* struct_attr_type = struct_attr_list->children[i]->children[2]->children[0];
 
-            ast_struct_attribute =  {struct_attr_name->value, convert_type(struct_attr_type)};
-            ast_struct_attr_list.push_back(ast_struct_attribute);
+            // ast_struct_attribute.first = struct_attr_name->value;
+            // ast_struct_attribute.second = convert_type(struct_attr_type);
+            ast_struct_attr_list.emplace_back(struct_attr_name->value, convert_type(struct_attr_type));
         }
 
         // Fill in the Struct Definition node
@@ -62,7 +62,7 @@ std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
         
         // Get the function name and parameters
         std::string name = child->children[1]->value;
-        std::vector<std::pair<std::string, Type>> ast_func_param_list;
+        std::vector<std::pair<std::string, std::unique_ptr<Type>>> ast_func_param_list;
         parse_tree_node* func_param_list_opt = child->children[3];
 
         // If the function has parameters, take them in
@@ -70,17 +70,16 @@ std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
             parse_tree_node* func_param_list = func_param_list_opt->children[0];
 
             for (int i = 0; i < func_param_list->num_children; i++) {
-                std::pair<std::string, Type> ast_func_param;
+                std::pair<std::string, std::unique_ptr<Type>> ast_func_param;
                 parse_tree_node* func_param_name = func_param_list->children[i]->children[0];
                 parse_tree_node* func_param_type = func_param_list->children[i]->children[2];
 
-                ast_func_param = {func_param_name->value, convert_type(func_param_type)};
-                ast_func_param_list.push_back(ast_func_param);
+                ast_func_param_list.emplace_back(func_param_name->value, convert_type(func_param_type));
             }
         }
 
         // Get function return type
-        std::optional<Type> ast_return_type;
+        std::optional<std::unique_ptr<Type>> ast_return_type;
         if (child->children[5]->num_children != 0) {
             ast_return_type = convert_type(child->children[5]->children[1]);
         }
@@ -90,9 +89,9 @@ std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
 
         FunctionDefn s;
         s.name = name;
-        s.args = ast_func_param_list;
-        s.return_type = ast_return_type;
-        s.body = ast_func_block;
+        s.args = std::move(ast_func_param_list);
+        s.return_type = std::move(ast_return_type);
+        s.body = std::move(ast_func_block);
         result_node = std::make_unique<FunctionDefn>(std::move(s));
 
     } else if (child->value == "variable_definition") {
@@ -110,17 +109,17 @@ std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
 /*** Helper Functions ***/
 
 
-Type convert_type(parse_tree_node *node) {
+std::unique_ptr<Type> convert_type(parse_tree_node *node) {
     if (strcmp(node->children[0]->value, "[") == 0) {
         ArrayType type = {
-            .element_type = std::make_unique<Type>(convert_type(node->children[1]))
+            .element_type = convert_type(node->children[1])
         };
-        return type;
+        return std::make_unique<ArrayType>(std::move(type));
     } else {
         AtomType type = {
             .name = std::string(node->children[0]->value)
         };
-        return type;
+        return std::make_unique<AtomType>(std::move(type));
     }
 }
 
@@ -138,11 +137,13 @@ std::vector<std::unique_ptr<Statement>> convert_block(parse_tree_node* block) {
 
 std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
     std::unique_ptr<Statement> ast_stmt;
-    
-    if (stmt_type->value == "variable_decl_stmt") {
+    std::string value = stmt_type->value;
+
+    if (value == "variable_decl_stmt") {
         LetStmt s;
         s.name = stmt_type->children[1]->value;
-        if (stmt_type->children[2]->num_children != 0) s.type = convert_type(stmt_type->children[2]->children[0]);
+        if (stmt_type->children[2]->num_children != 0)
+            s.type = convert_type(stmt_type->children[2]->children[0]);
         s.value = convert_expression(stmt_type->children[4]);
         ast_stmt = std::make_unique<LetStmt>(std::move(s));
     } else if (stmt_type->value == "assignment_stmt") {
@@ -169,22 +170,22 @@ std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
         WhileLoop s;
         s.condition = convert_expression(stmt_type->children[1]);
         s.body = convert_block(stmt_type->children[2]);
-        ast_stmt = std::make_unique<LetStmt>(std::move(s));
+        ast_stmt = std::make_unique<WhileLoop>(std::move(s));
     } else if (stmt_type->value == "for_loop_stmt") {
         ForLoop s;
         s.var = stmt_type->children[1]->value;
         s.condition = convert_expression(stmt_type->children[3]);
         s.body = convert_block(stmt_type->children[4]);
-        ast_stmt = std::make_unique<LetStmt>(std::move(s));
+        ast_stmt = std::make_unique<ForLoop>(std::move(s));
     } else if (stmt_type->value == "BREAK") {
         BreakStmt s;
-        ast_stmt = std::make_unique<LetStmt>(std::move(s));
+        ast_stmt = std::make_unique<BreakStmt>(std::move(s));
     } else if (stmt_type->value == "CONTINUE") {
         ContinueStmt s;
-        ast_stmt = std::make_unique<LetStmt>(std::move(s));
+        ast_stmt = std::make_unique<ContinueStmt>(std::move(s));
     } else if (stmt_type->value == "RETURN") {
         ReturnStmt s;
-        ast_stmt = std::make_unique<LetStmt>(std::move(s));
+        ast_stmt = std::make_unique<ReturnStmt>(std::move(s));
     } else {
         // No match (error(?)) (Todo: fill this accordingly)
     }
@@ -225,7 +226,7 @@ std::unique_ptr<Expr> convert_expression(parse_tree_node* expr) {
     s.left = convert_expression(expr->children[0]);
     s.right = convert_expression(expr->children[2]);
 
-    expr_res = std::make_unique<BinaryExpr>(s);
+    expr_res = std::make_unique<BinaryExpr>(std::move(s));
     return expr_res;
 }
 

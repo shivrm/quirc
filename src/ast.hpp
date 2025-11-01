@@ -74,21 +74,21 @@ struct Program : ASTNode {
 
 struct StructDefn : Definition {
     std::string name;
-    std::vector<std::pair<std::string, Type>> fields;
+    std::vector<std::pair<std::string, std::unique_ptr<Type>>> fields;
     void accept(Visitor &v) override;
 };
 
 struct FunctionDefn : Definition {
     std::string name;
-    std::vector<std::pair<std::string, Type>> args;
-    std::optional<Type> return_type;
+    std::vector<std::pair<std::string, std::unique_ptr<Type>>> args;
+    std::optional<std::unique_ptr<Type>> return_type;
     std::vector<std::unique_ptr<Statement>> body;
     void accept(Visitor &v) override;
 };
 
 struct VariableDefn : Definition {
     std::string name;
-    std::optional<Type> type;
+    std::optional<std::unique_ptr<Type>> type;
     std::unique_ptr<Expr> value;
     void accept(Visitor &v) override;
 };
@@ -106,7 +106,7 @@ struct ContinueStmt : Statement {
 
 struct LetStmt : Statement {
     std::string name;
-    std::optional<Type> type;
+    std::optional<std::unique_ptr<Type>> type;
     std::unique_ptr<Expr> value;
     void accept(Visitor &v) override;
 };

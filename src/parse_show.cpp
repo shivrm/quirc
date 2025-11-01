@@ -4,6 +4,7 @@ extern "C" {
 
 //#include "ast.hpp"
 #include <vector>
+#include "build_ast.cpp"
 
 extern "C" parse_tree_node *get_parse_tree();
 extern "C" int yyparse();

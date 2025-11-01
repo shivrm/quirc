@@ -43,7 +43,7 @@ static void update_position(const char* text, int length,
     if (strcmp(#name, "NEWLINE") == 0) { \
         yytext = "\\n"; \
     } \
-    printf("%-10s %-10s (%d:%d-%d:%d)\n", #name, yytext, sl, sc, el, ec); \
+    /*printf("%-10s %-10s (%d:%d-%d:%d)\n", #name, yytext, sl, sc, el, ec);*/ \
     return name; \
 }
 
