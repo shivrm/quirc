@@ -189,6 +189,8 @@ struct ArrayLiteral : Expr {
     void accept(Visitor &v) override;
 };
 
+// Visitor struct; visits each parse tree node by traversing the convert functions in 
+// build_ast.cpp and converts the parse tree to AST accordingly
 struct Visitor {
     virtual void visit(Program &f) = 0;
     virtual void visit(StructDefn &f) = 0;
