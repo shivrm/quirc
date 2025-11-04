@@ -18,6 +18,7 @@ std::unique_ptr<Expr> convert_expression_primary(parse_tree_node *expr);
 enum AssignmentOp parse_asgn_operand(std::string value);
 
 
+// Overall program conversion of the parse tree to an AST
 std::unique_ptr<Program> convert_program(parse_tree_node *node) {
     std::vector<std::unique_ptr<Definition>> nodes;
 
@@ -32,6 +33,7 @@ std::unique_ptr<Program> convert_program(parse_tree_node *node) {
     return std::make_unique<Program>(std::move(p));
 }
 
+// Converts the various definitions (declarations, as given in parser) in the program to their AST form
 std::unique_ptr<Definition> convert_definition(parse_tree_node *node) {
     std::string node_type  = node->value;
     std::unique_ptr<Definition> result_node;
@@ -125,6 +127,7 @@ std::unique_ptr<Type> convert_type(parse_tree_node *node) {
     }
 }
 
+// Converts a block parse tree node to a vector of Statement pointers
 std::vector<std::unique_ptr<Statement>> convert_block(parse_tree_node* block) {
     std::vector<std::unique_ptr<Statement>> ast_block;
 
@@ -137,6 +140,7 @@ std::vector<std::unique_ptr<Statement>> convert_block(parse_tree_node* block) {
     return ast_block;
 }
 
+// Matches the type of parse tree statement node, and accordingly gets the AST statement pointer
 std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
     std::unique_ptr<Statement> ast_stmt;
     std::string value = stmt_type->value;
@@ -205,6 +209,7 @@ std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
     return ast_stmt;
 }
 
+// Helper for the above function; converts and returns an optional attribute for a statement accordingly
 std::unique_ptr<Statement> convert_stmt_conditional(parse_tree_node* cond_stmt) {
     IfElse s;
     s.condition = convert_expression(cond_stmt->children[1]);
@@ -221,6 +226,7 @@ std::unique_ptr<Statement> convert_stmt_conditional(parse_tree_node* cond_stmt) 
     return stmt_res;
 }
 
+// Converts exressions from subexpressions recursively
 std::unique_ptr<Expr> convert_expression(parse_tree_node* expr) {
     // Take in "expression"s and convert them accordingly
 
@@ -239,6 +245,7 @@ std::unique_ptr<Expr> convert_expression(parse_tree_node* expr) {
     return expr_res;
 }
 
+// Converts unary expressions recursively
 std::unique_ptr<Expr> convert_expression_unary(parse_tree_node* expr) {
     // Todo: take in a certain "unary_expression" type, and return that type of expression AST node
     // Check if this is the correct way to do this
