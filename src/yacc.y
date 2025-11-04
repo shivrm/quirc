@@ -556,8 +556,9 @@ unary_expression
     // Note: this modification was made at AST conversion time, if needed revert to the old 
     // grammar after modifying the corresponding AST conversion code
     | postfix_expression {
-        $$ = create_node("postfix_expression");
-        if ($1) add_child($$, $1);
+        $$ = $1;
+        // $$ = create_node("postfix_expression");
+        // if ($1) add_child($$, $1);
     }
     ;
 
@@ -609,17 +610,20 @@ primary_expression
 
 literal
     : INT_LITERAL { 
+        $$ = create_node("INT_LITERAL");
         char buffer[32];
         sprintf(buffer, "%d", $1);
-        $$ = create_node(buffer); 
+        add_child($$, create_node(buffer)); 
     }
     | FLOAT_LITERAL { 
+        $$ = create_node("FLOAT_LITERAL");
         char buffer[32];
         sprintf(buffer, "%f", $1);
-        $$ = create_node(buffer); 
+        add_child($$, create_node(buffer)); 
     }
     | STRING_LITERAL { 
-        $$ = create_node($1); 
+        $$ = create_node("STRING_LITERAL");
+        add_child($$, create_node($1)); 
         free($1);
     }
     ;

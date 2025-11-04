@@ -3,10 +3,12 @@
 #include <string>
 #include <variant>
 #include <optional>
+#pragma once
 
 struct Visitor;
 
 struct Type {
+    virtual ~Type() = default;
 };
 
 struct AtomType: Type {
@@ -16,6 +18,8 @@ struct AtomType: Type {
 struct ArrayType: Type {
     std::unique_ptr<Type> element_type;
 };
+
+struct InferType: Type {};
 
 enum BinaryOp {
     ADD,
@@ -185,7 +189,7 @@ struct StringLiteral : Expr {
     void accept(Visitor &v) override;
 };
 struct ArrayLiteral : Expr {
-    std::vector<Expr> elems;
+    std::vector<std::unique_ptr<Expr>> elems;
     void accept(Visitor &v) override;
 };
 
@@ -214,25 +218,35 @@ struct Visitor {
     virtual void visit(ArrayLiteral &f) = 0;
 };
 
-void Program::accept(Visitor &v) { v.visit(*this); }
-void StructDefn::accept(Visitor &v) { v.visit(*this); }
-void FunctionDefn::accept(Visitor &v) { v.visit(*this); }
-void VariableDefn::accept(Visitor &v) { v.visit(*this); }
-void ReturnStmt::accept(Visitor &v) { v.visit(*this); }
-void BreakStmt::accept(Visitor &v) { v.visit(*this); }
-void ContinueStmt::accept(Visitor &v) { v.visit(*this); }
-void LetStmt::accept(Visitor &v) { v.visit(*this); }
-void AsgnStmt::accept(Visitor &v) { v.visit(*this); }
-void IfElse::accept(Visitor &v) { v.visit(*this); }
-void ForLoop::accept(Visitor &v) { v.visit(*this); }
-void WhileLoop::accept(Visitor &v) { v.visit(*this); }
-void BinaryExpr::accept(Visitor &v) { v.visit(*this); }
-void UnaryExpr::accept(Visitor &v) { v.visit(*this); }
-void CallExpr::accept(Visitor &v) { v.visit(*this); }
-void IndexExpr::accept(Visitor &v) { v.visit(*this); }
-void MemberExpr::accept(Visitor &v) { v.visit(*this); }
-void Ident::accept(Visitor &v) { v.visit(*this); }
-void IntLiteral::accept(Visitor &v) { v.visit(*this); }
-void FloatLiteral::accept(Visitor &v) { v.visit(*this); }
-void StringLiteral::accept(Visitor &v) { v.visit(*this); }
-void ArrayLiteral::accept(Visitor &v) { v.visit(*this); }
+struct PrintVisitor : Visitor {
+    explicit PrintVisitor(std::ostream &os);
+    void visit(Program &f) override;
+    void visit(StructDefn &f) override;
+    void visit(FunctionDefn &f) override;
+    void visit(VariableDefn &f) override;
+    void visit(ReturnStmt &f) override;
+    void visit(BreakStmt &f) override;
+    void visit(ContinueStmt &f) override;
+    void visit(LetStmt &f) override;
+    void visit(AsgnStmt &f) override;
+    void visit(IfElse &f) override;
+    void visit(ForLoop &f) override;
+    void visit(WhileLoop &f) override;
+    void visit(BinaryExpr &f) override;
+    void visit(UnaryExpr &f) override;
+    void visit(CallExpr &f) override;
+    void visit(IndexExpr &f) override;
+    void visit(MemberExpr &f) override;
+    void visit(Ident &f) override;
+    void visit(IntLiteral &f) override;
+    void visit(FloatLiteral &f) override;
+    void visit(StringLiteral &f) override;
+    void visit(ArrayLiteral &f) override;
+
+private:
+    std::ostream &out;
+    int indent;
+    void print_indent();
+    void print_type(const Type *t);
+    template<typename T> void visit_block(const std::vector<std::unique_ptr<T>> &block);
+};
