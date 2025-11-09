@@ -1,45 +1,65 @@
 # Project Makefile
 
 # Compiler and tools
-CXX = gcc
-LEX = flex
+CXX = g++
+FLEX = flex
 YACC = bison
+
+CC = gcc
+CFLAGS = 
 
 # Flags
 CXXFLAGS = -Wall -g
 
 # Sources
-LEX_SRC = src/lexer.l
-YACC_SRC = src/yacc.y
+FLEX_SRC = src/parser/flex.l
+YACC_SRC = src/parser/yacc.y
 
 # Generated files
-LEX_CPP = src/lexer.c
-YACC_CPP = src/yacc.c
-YACC_HPP = src/yacc.h
+FLEX_CPP = src/parser/flex.c
+YACC_CPP = src/parser/yacc.c
+YACC_HPP = src/parser/yacc.h
 
 # Output binary
 BUILD_DIR = build
 TARGET = $(BUILD_DIR)/compiler
 
+FLEX_OUT = build/flex.o
+YACC_OUT = build/yacc.o
+PARSE_TREE_OUT = build/parse_tree.o
+
+PARSER_OUT = $(FLEX_OUT) $(YACC_OUT) $(PARSE_TREE_OUT)
+
 # Default target
 all: $(TARGET)
 
-# Build the final executable
-$(TARGET): $(LEX_CPP) $(YACC_CPP)
-	mkdir -p $(BUILD_DIR)
-	$(CXX) src/parse_tree.c -c -o build/parse_tree.o
-# g++ build/parse_tree.o build/lexer.o build/yacc.o src/build_ast.cpp -o $(TARGET)
-	g++ $(CXXFLAGS) build/parse_tree.o build/lexer.o build/yacc.o src/ast.cpp src/print_ast.cpp src/parse_show.cpp -o $(TARGET)
-
 # Generate lexer from Flex
-$(LEX_CPP): $(LEX_SRC) $(YACC_HPP)
-	$(LEX) -o $(LEX_CPP) $(LEX_SRC)
-	$(CXX) $(LEX_CPP) -c -o build/lexer.o
-
+$(FLEX_CPP): $(FLEX_SRC) $(YACC_HPP)
+	$(FLEX) -o $(FLEX_CPP) $(FLEX_SRC)
+	
 # Generate parser from Bison
 $(YACC_CPP) $(YACC_HPP): $(YACC_SRC)
 	$(YACC) -d -o $(YACC_CPP) $(YACC_SRC)
-	$(CXX) $(YACC_CPP) -c -o build/yacc.o
+
+
+$(FLEX_OUT): $(FLEX_CPP)
+	$(CC) $(FLEX_CPP) -c -o $(FLEX_OUT)
+
+$(YACC_OUT): $(YACC_CPP) $(YACC_HPP)
+	$(CC) $(YACC_CPP) -c -o $(YACC_OUT)
+
+$(PARSE_TREE_OUT):
+	$(CC) src/parser/parse_tree.c -c -o $(PARSE_TREE_OUT)
+
+
+parser: $(FLEX_OUT) $(YACC_OUT) $(PARSE_TREE_OUT)
+	$(CC) src/parser/parse_tree.c -c -o build/parse_tree.o
+
+
+$(TARGET): parser
+	mkdir -p $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(PARSER_OUT) src/ast/ast.cpp src/ast/printvisitor/printvisitor.cpp src/main.cpp -o $(TARGET)
+	
 
 # Run with example file
 run: $(TARGET)
@@ -47,7 +67,7 @@ run: $(TARGET)
 
 # Clean generated files
 clean:
-	rm -f $(LEX_CPP) $(YACC_CPP) $(YACC_HPP) $(TARGET)
+	rm -f $(FLEX_CPP) $(YACC_CPP) $(YACC_HPP) $(TARGET)
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
 
