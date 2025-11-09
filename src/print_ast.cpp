@@ -218,6 +218,14 @@ void PrintVisitor::visit(BinaryExpr &f)
     indent--;
 }
 
+void PrintVisitor::visit(ExprStmt &f) {
+    print_indent();
+    out << "ExprStmt\n";
+    indent++;
+    f.expr->accept(*this);
+    indent--;
+}
+
 void PrintVisitor::visit(UnaryExpr &f)
 {
     print_indent();
@@ -232,10 +240,17 @@ void PrintVisitor::visit(CallExpr &f)
     print_indent();
     out << "CallExpr\n";
     indent++;
+    print_indent();
+    out << "Function: \n";
+    indent++;
     f.function->accept(*this);
+    indent--;
+    print_indent();
+    out << "Args: \n";
+    indent++;
     for (auto &a : f.args)
         a->accept(*this);
-    indent--;
+    indent -= 2;
 }
 
 void PrintVisitor::visit(IndexExpr &f)

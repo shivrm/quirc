@@ -12,6 +12,7 @@ void AsgnStmt::accept(Visitor &v) { v.visit(*this); }
 void IfElse::accept(Visitor &v) { v.visit(*this); }
 void ForLoop::accept(Visitor &v) { v.visit(*this); }
 void WhileLoop::accept(Visitor &v) { v.visit(*this); }
+void ExprStmt::accept(Visitor &v) { v.visit(*this); }
 void BinaryExpr::accept(Visitor &v) { v.visit(*this); }
 void UnaryExpr::accept(Visitor &v) { v.visit(*this); }
 void CallExpr::accept(Visitor &v) { v.visit(*this); }

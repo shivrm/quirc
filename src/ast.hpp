@@ -142,6 +142,11 @@ struct WhileLoop : Statement {
     void accept(Visitor &v) override;
 };
 
+struct ExprStmt : Statement {
+    std::unique_ptr<Expr> expr;
+    void accept(Visitor &v) override;
+};
+
 struct BinaryExpr : Expr {
     std::unique_ptr<Expr> left, right;
     BinaryOp op;
@@ -208,6 +213,7 @@ struct Visitor {
     virtual void visit(IfElse &f) = 0;
     virtual void visit(ForLoop &f) = 0;
     virtual void visit(WhileLoop &f) = 0;
+    virtual void visit(ExprStmt &f) = 0;
     virtual void visit(BinaryExpr &f) = 0;
     virtual void visit(UnaryExpr &f) = 0;
     virtual void visit(CallExpr &f) = 0;
@@ -234,6 +240,7 @@ struct PrintVisitor : Visitor {
     void visit(IfElse &f) override;
     void visit(ForLoop &f) override;
     void visit(WhileLoop &f) override;
+    void visit(ExprStmt &f) override;
     void visit(BinaryExpr &f) override;
     void visit(UnaryExpr &f) override;
     void visit(CallExpr &f) override;

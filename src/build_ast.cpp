@@ -16,6 +16,7 @@ std::unique_ptr<Expr> convert_expression_unary(parse_tree_node* expr_type);
 std::unique_ptr<Expr> convert_expression_postfix(parse_tree_node* expr);
 std::unique_ptr<Expr> convert_expression_primary(parse_tree_node *expr);
 enum AssignmentOp parse_asgn_operand(std::string value);
+enum BinaryOp parse_binary_operand(std::string value);
 
 
 // Overall program conversion of the parse tree to an AST
@@ -145,8 +146,6 @@ std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
     std::unique_ptr<Statement> ast_stmt;
     std::string value = stmt_type->value;
 
-    std::cout << "Hi" << ' ' << value << std::endl;
-
     if (value == "variable_decl_stmt") {
         LetStmt s;
         s.name = stmt_type->children[1]->value;
@@ -164,7 +163,8 @@ std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
     } else if (value == "assignment_stmt") {
         AsgnStmt s;
         s.name = stmt_type->children[0]->value;
-        s.op = parse_asgn_operand(stmt_type->children[1]->children[0]->value);
+        s.op = parse_asgn_operand(stmt_type->children[1]->value);
+        s.rhs = convert_expression(stmt_type->children[2]);
         ast_stmt = std::make_unique<AsgnStmt>(std::move(s));
     } else if (value == "conditional_stmt") {
         /*IfElse s;
@@ -180,6 +180,7 @@ std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
                 s.else_body = std::make_unique<>
             }
         }*/
+        std::cout << "Hi if\n";
         ast_stmt = convert_stmt_conditional(stmt_type);
     } else if (value == "while_loop_stmt") {
         WhileLoop s;
@@ -200,10 +201,18 @@ std::unique_ptr<Statement> convert_stmt(parse_tree_node* stmt_type) {
         ast_stmt = std::make_unique<ContinueStmt>(std::move(s));
     } else if (value == "RETURN") {
         ReturnStmt s;
+        s.value.reset();
+        if (stmt_type->num_children > 0) {
+            s.value = convert_expression(stmt_type->children[0]->children[0]);
+        }
         ast_stmt = std::make_unique<ReturnStmt>(std::move(s));
+        
     } else {
         // No match (error(?)) (Todo: fill this accordingly)
-        printf("Error!\n");
+        ExprStmt s;
+        s.expr = std::move(convert_expression(stmt_type)); 
+        ast_stmt = std::make_unique<ExprStmt>(std::move(s));
+        // printf("Error!\n");
     }
 
     return ast_stmt;
@@ -214,7 +223,7 @@ std::unique_ptr<Statement> convert_stmt_conditional(parse_tree_node* cond_stmt) 
     IfElse s;
     s.condition = convert_expression(cond_stmt->children[1]);
     s.body = convert_block(cond_stmt->children[2]);
-    if (cond_stmt->children[3] != NULL) {
+    if (cond_stmt->num_children > 3) {
         std::string value = cond_stmt->children[3]->children[1]->value;
         if (value == "block") s.else_body = convert_block(cond_stmt->children[3]->children[1]);
         else {
@@ -240,6 +249,7 @@ std::unique_ptr<Expr> convert_expression(parse_tree_node* expr) {
 
     s.left = convert_expression(expr->children[0]);
     s.right = convert_expression(expr->children[2]);
+    s.op = parse_binary_operand(expr->children[1]->value);
 
     expr_res = std::make_unique<BinaryExpr>(std::move(s));
     return expr_res;
@@ -251,7 +261,7 @@ std::unique_ptr<Expr> convert_expression_unary(parse_tree_node* expr) {
     // Check if this is the correct way to do this
 
     if (std::string(expr->value) == "postfix_expression") {
-        return convert_expression_postfix(expr->children[0]);
+        return convert_expression_postfix(expr);
     }
 
     UnaryExpr s;
@@ -266,13 +276,13 @@ std::unique_ptr<Expr> convert_expression_unary(parse_tree_node* expr) {
 }
 
 std::unique_ptr<Expr> convert_expression_postfix(parse_tree_node* expr) {
-    printf("Hi hi hi\n");
-    if (std::string(expr->value) == "primary_expression") {
-        return convert_expression_primary(expr->children[0]);
+    if (std::string(expr->children[0]->value) == "primary_expression") {
+        return convert_expression_primary(expr->children[0]->children[0]);
     }
 
 
     std::string value = expr->children[1]->value;
+    std::cout << "IDEK " << value << std::endl;
     if (value == "[") {
         IndexExpr e;
         e.container = std::move(convert_expression(expr->children[0]));    
@@ -285,13 +295,13 @@ std::unique_ptr<Expr> convert_expression_postfix(parse_tree_node* expr) {
         return std::make_unique<MemberExpr>(std::move(e));
     } else if (value == "(") {
         CallExpr e;
-        e.function = std::move(convert_expression(expr->children[0]));
+        e.function = std::move(convert_expression_postfix(expr->children[0]));
         std::vector<std::unique_ptr<Expr>> args;
         
         if (expr->num_children == 4) {
             parse_tree_node *arglist = expr->children[2]->children[0];
 
-            for (int i = 0; i < arglist->num_children; i++) {
+            for (int i = 0; i < arglist->num_children; i += 2) {
                 args.push_back(std::move(convert_expression(arglist->children[i])));
             }
         }
@@ -299,7 +309,7 @@ std::unique_ptr<Expr> convert_expression_postfix(parse_tree_node* expr) {
         e.args = std::move(args);
         return std::make_unique<CallExpr>(std::move(e));
     } else {
-        printf("Error\n");
+        printf("Error postfix\n");
     }
 }
 
@@ -318,7 +328,9 @@ std::unique_ptr<Expr> convert_expression_primary(parse_tree_node *expr) {
         s.value = expr->children[0]->value;
         return std::make_unique<StringLiteral>(std::move(s));
     } else {
-        printf("Error\n");
+        Ident s;
+        s.name = expr->value;
+        return std::make_unique<Ident>(std::move(s));
     }
 }
 
@@ -333,9 +345,31 @@ enum AssignmentOp parse_asgn_operand(std::string value) {
     else if (value == "&=") return BITAND_EQ;
     else if (value == "|=") return BITOR_EQ;
     else if (value == "^=") return BITXOR_EQ;
-    else return BITNOT_EQ;   // if "~="
+    else if (value == "~=") return BITNOT_EQ;
+    else throw std::invalid_argument("Unknown assign operator: " + value);
 }
 
+enum BinaryOp parse_binary_operand(const std::string value) {
+    if (value == "+") return ADD;
+    else if (value == "-") return SUB;
+    else if (value == "*") return MUL;
+    else if (value == "/") return DIV;
+    else if (value == "%") return MOD;
+    else if (value == "||") return OR;
+    else if (value == "&&") return AND;
+    else if (value == "|") return BITOR;
+    else if (value == "&") return BITAND;
+    else if (value == "^") return BITXOR;
+    else if (value == "==") return EQ;
+    else if (value == "!=") return NEQ;
+    else if (value == "<") return LT;
+    else if (value == "<=") return LE;
+    else if (value == ">") return GT;
+    else if (value == ">=") return GE;
+    else if (value == "<<") return SHL;
+    else if (value == ">>") return SHR;
+    else throw std::invalid_argument("Unknown binary operator: " + value);
+}
 
 
 extern "C" parse_tree_node *get_parse_tree();
